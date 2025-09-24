@@ -161,7 +161,7 @@ async def connect_to_server(self, server_script_path: str):
 Now let's add the core functionality for processing queries and handling tool calls:
 
 ```python
-def truncate_history(self, max_messages=50):
+def truncate_history(self, max_messages=25):
     if len(self.conversation_history) > max_messages:
         # keep system message (if any) + recent messages
         self.conversation_history = self.conversation_history[-max_messages:]
@@ -228,7 +228,6 @@ async def process_query(self, query: str) -> str:
                 "content": tool_results
             })
 
-        # if tool count == 0: break
         if tool_count == 0:
             break
 
