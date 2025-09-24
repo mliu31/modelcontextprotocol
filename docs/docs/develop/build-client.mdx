@@ -161,73 +161,78 @@ async def connect_to_server(self, server_script_path: str):
 Now let's add the core functionality for processing queries and handling tool calls:
 
 ```python
+def truncate_history(self, max_messages=50):
+    if len(self.conversation_history) > max_messages:
+        # keep system message (if any) + recent messages
+        self.conversation_history = self.conversation_history[-max_messages:]
+
 async def process_query(self, query: str) -> str:
     """Process query with Claude using atomic message blocks - complete assistant responses followed by complete tool results"""
-    # add query to history
-        self.conversation_history.append({"role": "user", "content": query})
-        log_parts = []
+    self.truncate_history()
+    self.conversation_history.append({"role": "user", "content": query})
+    log_parts = []
 
-        while True:
-            claude_response = self.anthropic.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=1000,
-                messages=self.conversation_history,
-                tools=self.tools
-            )
+    while True:
+        claude_response = self.anthropic.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=1000,
+            messages=self.conversation_history,
+            tools=self.tools
+        )
 
-            assistant_content = []
-            tool_calls_to_execute = []
-            tool_count = 0
+        assistant_content = []
+        tool_calls_to_execute = []
+        tool_count = 0
 
-            for content in claude_response.content:
-                if content.type == 'text':
-                    assistant_content.append(content)
-                    log_parts.append(content.text)
-                elif content.type == 'tool_use':
-                    assistant_content.append(content)
-                    tool_calls_to_execute.append(content)
-                    tool_count += 1
+        for content in claude_response.content:
+            if content.type == 'text':
+                assistant_content.append(content)
+                log_parts.append(content.text)
+            elif content.type == 'tool_use':
+                assistant_content.append(content)
+                tool_calls_to_execute.append(content)
+                tool_count += 1
 
-            # Log entire LLM response as one assistant message
-            self.conversation_history.append({
-                "role": "assistant", 
-                "content": assistant_content
+        # Log entire LLM response as one assistant message
+        self.conversation_history.append({
+            "role": "assistant", 
+            "content": assistant_content
+        })
+
+        tool_results = []
+        for tool_call in tool_calls_to_execute:
+            log_parts.append(f"calling {tool_call.name} with {tool_call.input}")
+            
+            result = await self.session.call_tool(tool_call.name, tool_call.input)
+            
+            result_content = []
+            if result.content:
+                for content in result.content:
+                    if hasattr(content, 'text'):
+                        result_content.append(content.text)
+                    else:
+                        result_content.append(str(content))
+            
+            result_text = '\n'.join(result_content) if result_content else "no result"
+            
+            tool_results.append({
+                "type": "tool_result",
+                "tool_use_id": tool_call.id,
+                "content": result_text
             })
 
-            tool_results = []
-            for tool_call in tool_calls_to_execute:
-                log_parts.append(f"calling {tool_call.name} with {tool_call.input}")
-                
-                result = await self.session.call_tool(tool_call.name, tool_call.input)
-                
-                result_content = []
-                if result.content:
-                    for content in result.content:
-                        if hasattr(content, 'text'):
-                            result_content.append(content.text)
-                        else:
-                            result_content.append(str(content))
-                
-                result_text = '\n'.join(result_content) if result_content else "no result"
-                
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": tool_call.id,
-                    "content": result_text
-                })
+        # Log all tool call results as one user message
+        if tool_results:
+            self.conversation_history.append({
+                "role": "user",
+                "content": tool_results
+            })
 
-            # Log all tool call results as one user message
-            if tool_results:
-                self.conversation_history.append({
-                    "role": "user",
-                    "content": tool_results
-                })
+        # if tool count == 0: break
+        if tool_count == 0:
+            break
 
-            # if tool count == 0: break
-            if tool_count == 0:
-                break
-
-        return '\n'.join(log_parts)
+    return '\n'.join(log_parts)
 ```
 
 ### Interactive Chat Interface
