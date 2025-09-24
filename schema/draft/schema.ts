@@ -491,6 +491,12 @@ export interface ReadResourceRequest extends JSONRPCRequest {
      * @format uri
      */
     uri: string;
+    /**
+     * If true, the server should return only metadata fields (name, title, description, icons, annotations, size) without the actual content (text or blob).
+     *
+     * This allows clients to efficiently check resource metadata (e.g., lastModified timestamp, size) without fetching potentially large contents.
+     */
+    metadataOnly?: boolean;
   };
 }
 
@@ -645,13 +651,21 @@ export interface ResourceContents {
   /**
    * The URI of this resource.
    *
+   * @deprecated This field is superseded by metadata.uri and MUST match it. This field will be removed in a future protocol version.
    * @format uri
    */
   uri: string;
   /**
    * The MIME type of this resource, if known.
+   *
+   * @deprecated This field is superseded by metadata.mimeType. When present, it MUST match metadata.mimeType. This field will be removed in a future protocol version.
    */
   mimeType?: string;
+
+  /**
+   * Resource metadata matching the Resource type from resources/list.
+   */
+  metadata: Resource;
 
   /**
    * See [General fields: `_meta`](/specification/draft/basic/index#meta) for notes on `_meta` usage.
@@ -663,7 +677,7 @@ export interface TextResourceContents extends ResourceContents {
   /**
    * The text of the item. This must only be set if the item can actually be represented as text (not binary data).
    */
-  text: string;
+  text?: string;
 }
 
 export interface BlobResourceContents extends ResourceContents {
@@ -672,7 +686,7 @@ export interface BlobResourceContents extends ResourceContents {
    *
    * @format byte
    */
-  blob: string;
+  blob?: string;
 }
 
 /* Prompts */

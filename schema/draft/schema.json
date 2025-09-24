@@ -91,15 +91,13 @@
                     "description": "Resource metadata matching the Resource type from resources/list."
                 },
                 "mimeType": {
-                    "description": "The MIME type of this resource, if known.\n\nDeprecated: This field is superseded by metadata.mimeType. When present, it MUST match metadata.mimeType. This field will be removed in a future protocol version.",
-                    "type": "string",
-                    "deprecated": true
+                    "description": "The MIME type of this resource, if known.",
+                    "type": "string"
                 },
                 "uri": {
-                    "description": "The URI of this resource.\n\nDeprecated: This field is superseded by metadata.uri and MUST match it. This field will be removed in a future protocol version.",
+                    "description": "The URI of this resource.",
                     "format": "uri",
-                    "type": "string",
-                    "deprecated": true
+                    "type": "string"
                 }
             },
             "required": [
@@ -2039,6 +2037,10 @@
                     "description": "See [General fields: `_meta`](/specification/draft/basic/index#meta) for notes on `_meta` usage.",
                     "type": "object"
                 },
+                "metadata": {
+                    "$ref": "#/definitions/Resource",
+                    "description": "Resource metadata matching the Resource type from resources/list."
+                },
                 "mimeType": {
                     "description": "The MIME type of this resource, if known.",
                     "type": "string"
@@ -2050,6 +2052,7 @@
                 }
             },
             "required": [
+                "metadata",
                 "uri"
             ],
             "type": "object"
@@ -2609,19 +2612,17 @@
                     "description": "Resource metadata matching the Resource type from resources/list."
                 },
                 "mimeType": {
-                    "description": "The MIME type of this resource, if known.\n\nDeprecated: This field is superseded by metadata.mimeType. When present, it MUST match metadata.mimeType. This field will be removed in a future protocol version.",
-                    "type": "string",
-                    "deprecated": true
+                    "description": "The MIME type of this resource, if known.",
+                    "type": "string"
                 },
                 "text": {
                     "description": "The text of the item. This must only be set if the item can actually be represented as text (not binary data).",
                     "type": "string"
                 },
                 "uri": {
-                    "description": "The URI of this resource.\n\nDeprecated: This field is superseded by metadata.uri and MUST match it. This field will be removed in a future protocol version.",
+                    "description": "The URI of this resource.",
                     "format": "uri",
-                    "type": "string",
-                    "deprecated": true
+                    "type": "string"
                 }
             },
             "required": [
