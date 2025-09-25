@@ -191,11 +191,10 @@ async def process_query(self, query: str) -> str:
         assistant_content = []
         tool_calls_to_execute = []
         for content in claude_response.content:
+            assistant_content.append(content)
             if content.type == 'text':
-                assistant_content.append(content)
                 log_parts.append(content.text)
             elif content.type == 'tool_use':
-                assistant_content.append(content)
                 tool_calls_to_execute.append(content)
         
         # Log entire LLM response as one assistant message
