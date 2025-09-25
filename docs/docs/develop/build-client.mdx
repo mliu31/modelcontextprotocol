@@ -163,6 +163,7 @@ Now let's add the core functionality for processing queries and handling tool ca
 
 ```python
 def truncate_history(self, max_messages=25):
+    """Keep conversation history under max_messages to prevent context overflow"""
     if len(self.conversation_history) > max_messages:
         self.conversation_history = self.conversation_history[-max_messages:]
 
